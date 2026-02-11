@@ -12,9 +12,11 @@ def call_tool(name, args):
     if calculator is None:
         raise RuntimeError("Calculator backend not available")
     if name == "add":
-        numbers = args.get("numbers") or [args.get("number")]
-        for n in numbers:
-            calculator.add(n)
+        # Expect a single argument named "number". Callers should invoke add
+        # multiple times for multiple numbers rather than passing lists.
+        if "number" not in args:
+            raise ValueError("Missing required argument: 'number'")
+        calculator.add(args["number"])
     elif name == "get_total":
         return calculator.get_total()
     elif name == "clear_all":

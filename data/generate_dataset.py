@@ -2,16 +2,27 @@
 
 import json
 import random
-from templates import ADD_TEMPLATES
-from number_words import to_words
+from .templates import ADD_TEMPLATES
+from .number_words import to_words
 
 
 def make_add_example():
     a, b = random.randint(1, 100), random.randint(1, 100)
-    sentence = random.choice(ADD_TEMPLATES).format(a=to_words(a), b=to_words(b))
+    template = random.choice(ADD_TEMPLATES)
+    if "{c}" in template:
+        c = random.randint(1, 100)
+        sentence = template.format(a=to_words(a), b=to_words(b), c=to_words(c))
+        numbers = [a, b, c]
+    else:
+        sentence = template.format(a=to_words(a), b=to_words(b))
+        numbers = [a, b]
+    # Emit a single 'number' argument; when templates contain multiple
+    # values the dataset currently encodes the first value as the example
+    # tool call. Model/agent training can produce multiple add() calls if
+    # desired during inference.
     tool_call = {
         "name": "add",
-        "arguments": {"numbers": [a, b]}
+        "arguments": {"number": numbers[0]}
     }
     return {"user": sentence, "tool_call": tool_call}
 

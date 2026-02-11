@@ -18,7 +18,9 @@ def test_add_and_get_total():
 
 def test_add_numbers_list():
     call_tool("clear_all", {})
-    call_tool("add", {"numbers": [2, 3]})
+    # Call add twice with single 'number' arg to simulate multiple inputs
+    call_tool("add", {"number": 2})
+    call_tool("add", {"number": 3})
     res = call_tool("get_total", {})
     assert float(res) == 5.0
 
