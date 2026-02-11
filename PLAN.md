@@ -24,15 +24,16 @@ a corpus of training data based on strings
     calc.add(9)
     calc.get_total() # shows int 16 (i.e NOT "sixteen")
 
+
 ## Tasks
 This folder is a python venv, all functionGemma files are contained - done
 functionGemma is currently working - done  
 TODO 
-create folders and documents as outlined at end of this file
-rm the now defunct file suggestions at the end of this file when that job is checked and done 
-create git repo
-create README file
-create .gitignore
+create folders and documents as outlined at end of this file - done
+rm the now defunct file suggestions at the end of this file when that job is checked - done 
+create git repo - done
+create README file - done
+create .gitignore - done
 
 
 
@@ -57,11 +58,37 @@ Then add the ability to extract the numbers from the text in python
 
 ### Phase 3 Does the concept work with complex number strings?
 
+    e.g. in Phase 3
+    "What is 1,234.56 and 7.89?"
+    (functionGemma calls add(1234.56) and add(7.89)
+    calc.add(1234.56)
+    calc.add(7.89)
+    calc.get_total() # shows float 1242.45 (i.e NOT "one thousand two hundred forty-two point four five")
+
 Add ability to extract complex numbers from text e.g. decimals, thousands and hundreds etc
 
 ### Phase 4 Add the methods subtract(), multiply() and divide()
 
-Gradually add other methods also using TDD 
+    e.g. in Phase 4
+    "What is 10 minus 3?"
+    (functionGemma calls add(10) and subtract(3)
+    calc.add(10)
+    calc.subtract(3)
+    calc.get_total() # shows int 7
+
+    "Multiply 6 and 7"
+    (functionGemma calls multiply(6) and multiply(7)
+    calc.multiply(6)
+    calc.multiply(7)
+    calc.get_total() # shows int 42
+
+    "What is 10 divided by 2?"
+    (functionGemma calls add(10) and divide(2)
+    calc.add(10)
+    calc.divide(2)
+    calc.get_total() # shows float 5.0
+
+Gradually add other methods also using TDD
 
 #### Tools and methods
 python 
@@ -106,211 +133,4 @@ HF tensors
 	│
 	└── copilot-instructions.md 
 
-
-
-
-Below are eExamples of file content mostly missing, then add the suggested content as python comments to the files, again for those that are missing from this directory tree. 
-
-
-
-### file : requirements.txt contains e.g.
-
-torch
-transformers
-accelerate
-bitsandbytes
-datasets
-num2words
-
-
-### file : fg_tests.py contains e.g.
-
-an example of FG usage where it fails to do basic
-arithmetic on its own
-
-### file : load_functionGemma_8bit.py contains e.g.
-
-a simple file which proves the correct model is loaded
-
-### file : app/dispatcher.py contains e.g.
-
-# Takes model output JSON → calls calculator methods.
-
-import json
-from calculator_interface import call_tool
-
-def dispatch(model_output: str):
-    """
-    Expects: {"name":"add","arguments":{"number":27}}
-    """
-    tool_call = json.loads(model_output)
-    result = call_tool(tool_call["name"], tool_call.get("arguments", {}))
-    return result
-
-
-### file : app/calculator_interface.py contains e.g.
-
-#Wraps the  existing calculator so the rest of the system doesn’t care about internals.
-
-from calculator import Calculator  # your existing class
-
-calculator = Calculator()
-
-def call_tool(name, args):
-    if name == "add":
-        calculator.add(args["number"])
-    elif name == "get_total":
-        return calculator.get_total()
-    elif name == "clear_all":
-        calculator.clear_all()
-    else:
-        raise ValueError(f"Unknown tool: {name}")
-
-### file : inference/load_model.py contains e.g.
-
-# Loads FunctionGemma in 8-bit.
-
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-
-MODEL_ID = "google/functiongemma-270m-it"
-
-def load():
-    bnb_config = BitsAndBytesConfig(load_in_8bit=True)
-
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-    model = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID,
-        quantization_config=bnb_config,
-        device_map="auto"
-    )
-    model.eval()
-    return tokenizer, model
-
-### file : inference/prompt_builder.py contains e.g.
-
-# Builds structured prompts for function calling.
-
-SYSTEM_PROMPT = """You are a system that converts calculator requests into JSON function calls.
-
-Available functions:
-
-add(number()
-get_total()
-clear_all()
-
-Respond ONLY with JSON.
-"""
-
-def build_prompt(user_input: str):
-    return f"{SYSTEM_PROMPT}\nUser: {user_input}\nAssistant:"
-
-### file : inference/run_agent.py contains e.g.
-
-# Main loop: user → model → dispatcher → calculator.
-
-import torch
-from load_model import load
-from prompt_builder import build_prompt
-from app.dispatcher import dispatch
-
-tokenizer, model = load()
-
-while True:
-    user_input = input(">> ")
-
-    prompt = build_prompt(user_input)
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-
-    with torch.no_grad():
-        outputs = model.generate(**inputs, max_new_tokens=100, do_sample=False)
-
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    print("Model raw:", response)
-
-    try:
-        result = dispatch(response)
-        if result is not None:
-            print("Calculator:", result)
-    except Exception as e:
-        print("Dispatch error:", e)
-
-### file :  data/templates.py contains e.g.
-
-# Sentence templates for synthetic data.
-
-ADD_TEMPLATES = [
-    "What is {a} and {b}?",
-    "How much is {a} and {b}?",
-    "Add {a} and {b} makes?",
-    "Add {a}, {b} and {c}, show total",
-    "Add {a} plus {b} plus  {c} what does that come to?",
-]
-
-TOTAL_TEMPLATES = [
-    "What is the total?",
-    "Current total?",
-]
-
-CLEAR_TEMPLATES = [
-    "Clear everything",
-    "Reset calculator"
-]
-
-### file : 🔢 data/number_words.py contains e.g.
-
-# Converts numbers to words to create synthetic data
-
-from num2words import num2words
-
-def to_words(n):
-    return num2words(n)
-
-### file : data/generate_dataset.py contains e.g.
-
-# Creates training examples.
-
-import json
-import random
-from templates import ADD_TEMPLATES
-from number_words import to_words
-
-def make_add_example():
-    a, b = random.randint(1, 100), random.randint(1, 100)
-    sentence = random.choice(ADD_TEMPLATES).format(a=to_words(a), b=to_words(b))
-    tool_call = {
-        "name": "add",
-        "arguments": {"numbers": [a, b]}
-    }
-    return {"user": sentence, "tool_call": tool_call}
-
-with open("calculator_dataset.jsonl", "w") as f:
-    for _ in range(500):
-        example = make_add_example()
-        f.write(json.dumps(example) + "\n")
-
-### file : training/finetune.py (skeleton) contains e.g.
-
-# from datasets import load_dataset
-from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer
-
-dataset = load_dataset("json", data_files="../data/calculator_dataset.jsonl")
-
-model_id = "google/functiongemma-270m-it"
-tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModelForCausalLM.from_pretrained(model_id)
-
-def format_example(example):
-    prompt = f"User: {example['user']}\nAssistant: {example['tool_call']}"
-    return tokenizer(prompt, truncation=True)
-
-dataset = dataset.map(format_example)
-
-training_args = TrainingArguments(
-    output_dir="./fg-calculator",
-    per_device_train_batch_size=4,
-    num_train_epochs=3,
-)
-
-trainer = Trainer(model=model, args=training_args, train_dataset=dataset["train"])
-trainer.train()
 
