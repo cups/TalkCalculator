@@ -12,19 +12,13 @@ def make_add_example():
     if "{c}" in template:
         c = random.randint(1, 100)
         sentence = template.format(a=to_words(a), b=to_words(b), c=to_words(c))
-        number = a
+        numbers = [a, b, c]
     else:
         sentence = template.format(a=to_words(a), b=to_words(b))
-        number = a
-    # Emit a single 'number' argument; when templates contain multiple
-    # values the dataset currently encodes the first value as the example
-    # tool call. Model/agent training can produce multiple add() calls if
-    # desired during inference.
-    tool_call = {
-        "name": "add",
-        "arguments": {"number": number}
-    }
-    return {"user": sentence, "tool_call": tool_call}
+        numbers = [a, b]
+    # Emit a sequence of tool calls (one add per number)
+    tool_calls = [{"name": "add", "arguments": {"number": n}} for n in numbers]
+    return {"user": sentence, "tool_calls": tool_calls}
 
 
 with open("calculator_dataset.jsonl", "w") as f:
