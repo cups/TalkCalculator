@@ -127,7 +127,7 @@ HF tensors
 	│
 	└── requirements.txt
 	│
-	└── fg_tests.py 
+	└── fg_tester.py 
 	│
 	└── load_functionGemma_8bit.py
 	│
