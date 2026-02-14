@@ -91,6 +91,24 @@ def main():
     bnb = BitsAndBytesConfig(load_in_8bit=True)
     model = AutoModelForCausalLM.from_pretrained(args.model_id, quantization_config=bnb, device_map='auto')
 
+    # Prepare model for k-bit training and attach LoRA adapters (PEFT) so fine-tuning is possible
+    try:
+        from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+
+        model = prepare_model_for_kbit_training(model)
+        lora_config = LoraConfig(
+            r=8,
+            lora_alpha=32,
+            target_modules=["q_proj", "v_proj"],
+            inference_mode=False,
+        )
+        model = get_peft_model(model, lora_config)
+        print("Attached LoRA adapters for k-bit training")
+    except Exception as e:
+        print("PEFT not available or failed to configure LoRA adapters:", e)
+        print("Install peft and retry: pip install peft")
+        raise
+
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
     training_args = TrainingArguments(
