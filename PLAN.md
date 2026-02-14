@@ -2,6 +2,8 @@
 
 # PLAN
 
+Note: calculator_dataset.jsonl is currently listed in .gitignore to keep generated datasets local for testing; remove this line from .gitignore and add the dataset to the repo once it has been validated.
+
 We have a functioning and robust python Calculator class 
 (https://github.com/cups/Calculator/tree/main)
 Now we want to insert functionGemma between a simple interface 
