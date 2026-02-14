@@ -7,3 +7,4 @@ fg-env/
 .vscode/
 __init*.py
 calculator_dataset.jsonl
+msg.txt
